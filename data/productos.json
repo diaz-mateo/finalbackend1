@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "title": "Camisa blanca",
+    "description": "Camisa manga larga 100% algodón",
+    "code": "CAM001",
+    "price": 59.9,
+    "status": true,
+    "stock": 25,
+    "category": "Ropa",
+    "thumbnails": [
+      "img/camisa1.jpg"
+    ]
+  }
+]
