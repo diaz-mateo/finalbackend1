@@ -1,64 +1,129 @@
 const path = require('path');
-const { readJSON, writeJSON } = require('../utils/fsUtils');
-const filePath = path.join(__dirname, '../data/productos.json');
+const {
+  getProducts,
+  saveProducts,
+  addProduct,
+  deleteProductById
+} = require('../utils/fsUtils');
 
-const generateId = (products) => {
-  return products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
-};
+const productsPath = path.join(__dirname, '../data/productos.json');
 
-exports.getAllProducts = async (req, res) => {
-  const products = await readJSON(filePath);
-  const limit = req.query.limit ? parseInt(req.query.limit) : products.length;
-  res.json(products.slice(0, limit));
-};
+// 🔹 Para WebSocket
+const addProductRaw = async (productData) => {
+  const { title, description, code, price, stock, category, thumbnails, status } = productData;
 
-exports.getProductById = async (req, res) => {
-  const products = await readJSON(filePath);
-  const product = products.find(p => p.id == req.params.pid);
-  if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
-  res.json(product);
-};
+  if (!title || !description || !code || !price || !stock || !category) {
+    throw new Error('Faltan campos obligatorios');
+  }
 
-exports.addProduct = async (req, res) => {
-  const { title, description, code, price, status = true, stock, category, thumbnails = [] } = req.body;
-  if (!title || !description || !code || price == null || stock == null || !category)
-    return res.status(400).json({ error: 'Campos obligatorios faltantes' });
+  const products = await getProducts();
+  const newId = (Math.max(0, ...products.map(p => parseInt(p.id))) + 1).toString();
 
-  const products = await readJSON(filePath);
   const newProduct = {
-    id: generateId(products),
+    id: newId,
     title,
     description,
     code,
     price,
-    status,
     stock,
     category,
-    thumbnails
+    thumbnails: thumbnails || [],
+    status: status !== undefined ? status : true
   };
 
   products.push(newProduct);
-  await writeJSON(filePath, products);
-  res.status(201).json(newProduct);
+  await saveProducts(products);
+  return newProduct;
 };
 
-exports.updateProduct = async (req, res) => {
-  const products = await readJSON(filePath);
-  const index = products.findIndex(p => p.id == req.params.pid);
-  if (index === -1) return res.status(404).json({ error: 'Producto no encontrado' });
-
-  const updatedProduct = { ...products[index], ...req.body, id: products[index].id };
-  products[index] = updatedProduct;
-  await writeJSON(filePath, products);
-  res.json(updatedProduct);
+// 🔹 API HTTP: GET /api/products
+const getAllProducts = async (req, res) => {
+  try {
+    const products = await getProducts();
+    const limit = req.query.limit;
+    if (limit) {
+      return res.json(products.slice(0, parseInt(limit)));
+    }
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener productos' });
+  }
 };
 
-exports.deleteProduct = async (req, res) => {
-  let products = await readJSON(filePath);
-  const exists = products.find(p => p.id == req.params.pid);
-  if (!exists) return res.status(404).json({ error: 'Producto no encontrado' });
+// 🔹 API HTTP: GET /api/products/:pid
+const getProductById = async (req, res) => {
+  try {
+    const { pid } = req.params;
+    const products = await getProducts();
+    const product = products.find(p => p.id == pid);
+    if (!product) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al buscar producto' });
+  }
+};
 
-  products = products.filter(p => p.id != req.params.pid);
-  await writeJSON(filePath, products);
-  res.json({ message: 'Producto eliminado' });
+// 🔹 API HTTP: POST /api/products
+const addProductHandler = async (req, res) => {
+  try {
+    const newProduct = await addProduct(req.body);
+    res.status(201).json({ message: 'Producto agregado', product: newProduct });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// 🔹 API HTTP: PUT /api/products/:pid
+const updateProduct = async (req, res) => {
+  try {
+    const { pid } = req.params;
+    const updateData = req.body;
+
+    if (updateData.id) {
+      return res.status(400).json({ error: 'No se puede modificar el ID del producto' });
+    }
+
+    const products = await getProducts();
+    const index = products.findIndex(p => p.id == pid);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+
+    products[index] = { ...products[index], ...updateData };
+    await saveProducts(products);
+
+    res.json({ message: 'Producto actualizado', product: products[index] });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al actualizar producto' });
+  }
+};
+
+// 🔹 API HTTP: DELETE /api/products/:pid
+const deleteProduct = async (req, res) => {
+  try {
+    const { pid } = req.params;
+    const success = await deleteProductById(pid);
+    if (!success) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+    res.json({ message: 'Producto eliminado' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar producto' });
+  }
+};
+
+module.exports = {
+  // HTTP API
+  getAllProducts,
+  getProductById,
+  addProduct: addProductHandler,
+  updateProduct,
+  deleteProduct,
+  // Vistas
+  getProducts,
+  // WebSocket
+  addProductRaw,
+  deleteProductById
 };

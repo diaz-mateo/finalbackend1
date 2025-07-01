@@ -1,15 +1,13 @@
 [
   {
-    "id": 1,
-    "title": "Camisa blanca",
-    "description": "Camisa manga larga 100% algodón",
-    "code": "CAM001",
-    "price": 59.9,
-    "status": true,
-    "stock": 25,
-    "category": "Ropa",
-    "thumbnails": [
-      "img/camisa1.jpg"
-    ]
+    "id": "4",
+    "title": "Cartera",
+    "description": "Hecha de cuero",
+    "code": "5467",
+    "price": 200,
+    "stock": 3,
+    "category": "Moda",
+    "thumbnails": [],
+    "status": true
   }
 ]

@@ -1,0 +1,16 @@
+<h1>Lista de productos (vista simple)</h1>
+
+<ul>
+  {{#each products}}
+    <li>ID: <strong>{{id}}</strong> | {{title}} - ${{price}}</li>
+  {{/each}}
+</ul>
+
+<hr>
+
+<h2>Navegación</h2>
+<ul>
+  <li><a href="/">Inicio</a></li>
+  <li><a href="/realtimeproducts">🧩 Vista en tiempo real (Websockets)</a></li>
+  <li><a href="/api/products">🔍 Ver productos (API JSON)</a></li>
+</ul>
