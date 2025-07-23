@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Editar producto</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f4;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .form-container {
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 30px;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    input[type="checkbox"] {
+      margin-left: 5px;
+    }
+
+    .btn {
+      margin-top: 25px;
+      padding: 12px 18px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn:hover {
+      background-color: #218838;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Editar producto</h1>
+
+    <form action="/products/edit/{{product._id}}" method="POST">
+      <label for="title">Título:</label>
+      <input type="text" name="title" value="{{product.title}}" required>
+
+      <label for="description">Descripción:</label>
+      <input type="text" name="description" value="{{product.description}}" required>
+
+      <label for="price">Precio:</label>
+      <input type="number" name="price" value="{{product.price}}" required>
+
+      <label for="code">Código:</label>
+      <input type="text" name="code" value="{{product.code}}" required>
+
+      <label for="stock">Stock:</label>
+      <input type="number" name="stock" value="{{product.stock}}" required>
+
+      <label for="category">Categoría:</label>
+      <input type="text" name="category" value="{{product.category}}" required>
+
+      <label for="status">Disponible:
+        <input type="checkbox" name="status" {{#if product.status}}checked{{/if}}>
+      </label>
+
+      <button class="btn" type="submit">Guardar cambios</button>
+    </form>
+
+    <a class="back-link" href="/products">← Volver al listado</a>
+  </div>
+</body>
+</html>

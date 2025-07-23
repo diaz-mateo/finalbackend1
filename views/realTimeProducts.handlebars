@@ -2,10 +2,10 @@
 
 <ul id="productList">
   {{#each products}}
-    <li data-id="{{id}}" style="margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+    <li data-id="{{_id}}" style="margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
       <strong>{{title}}</strong> - ${{price}}<br>
-      🆔 ID: <code>{{id}}</code>
-      <button class="deleteBtn" data-id="{{id}}">❌ Eliminar</button>
+      🆔 ID: <code>{{_id}}</code><br>
+      <button class="deleteBtn" data-id="{{_id}}">❌ Eliminar</button>
     </li>
   {{/each}}
 </ul>
@@ -14,12 +14,12 @@
 
 <h2>➕ Agregar nuevo producto</h2>
 <form id="addForm">
-  <input name="title" placeholder="Título" required />
-  <input name="price" type="number" placeholder="Precio" required />
-  <input name="description" placeholder="Descripción" required />
-  <input name="code" placeholder="Código" required />
-  <input name="stock" type="number" placeholder="Stock" required />
-  <input name="category" placeholder="Categoría" required />
+  <input name="title" type="text" placeholder="Título" required />
+  <input name="price" type="number" min="0" step="0.01" placeholder="Precio" required />
+  <input name="description" type="text" placeholder="Descripción" required />
+  <input name="code" type="text" placeholder="Código" required />
+  <input name="stock" type="number" min="0" placeholder="Stock" required />
+  <input name="category" type="text" placeholder="Categoría" required />
   <button type="submit">Agregar</button>
 </form>
 
@@ -27,7 +27,7 @@
 
 <h2>🧹 Eliminar producto por ID</h2>
 <form id="deleteForm">
-  <input name="id" placeholder="ID del producto" required />
+  <input name="id" type="text" placeholder="ID del producto" required />
   <button type="submit">Eliminar</button>
 </form>
 

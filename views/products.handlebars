@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>🛍️ Lista de Productos</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: #ffffff;
+      border-bottom: 1px solid #ccc;
+    }
+
+    main {
+      padding: 2rem;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    img {
+      max-width: 200px;
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .pagination a {
+      text-decoration: none;
+      font-weight: bold;
+      background-color: #007bff;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+    }
+
+    .product-link {
+      display: inline-block;
+      margin-top: 1rem;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+    }
+
+    nav a {
+      text-decoration: none;
+      font-weight: bold;
+      color: #333;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    .actions {
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .actions button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .edit-btn {
+      background-color: #ffc107;
+      color: white;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .add-btn {
+      background-color: #28a745;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .cart-btn {
+      background-color: #17a2b8;
+      color: white;
+    }
+
+    .available {
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      font-weight: bold;
+      display: inline-block;
+      margin-top: 0.5rem;
+    }
+
+    .available.true {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .available.false {
+      background-color: #ccc;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛍️ Lista de Productos</h1>
+    <nav>
+      {{#if cartId}}
+        <a href="/carts/{{cartId}}">🛒 Ver mi carrito</a>
+      {{else}}
+        <span>🛒 Carrito no disponible</span>
+      {{/if}}
+    </nav>
+  </header>
+
+  <main>
+    <button class="add-btn" onclick="location.href='/products/new'">➕ Agregar producto</button>
+
+    {{#if products.length}}
+      <ul>
+        {{#each products}}
+          <li>
+            <h2>{{this.title}}</h2>
+
+            {{#if this.thumbnails.[0]}}
+              <img src="{{this.thumbnails.[0]}}" alt="Imagen de {{this.title}}">
+            {{/if}}
+
+            <p><strong>Precio:</strong> ${{this.price}}</p>
+            <p><strong>Categoría:</strong> {{this.category}}</p>
+            <p><strong>Stock:</strong> {{this.stock}}</p>
+            <span class="available {{this.status}}">
+              {{#if this.status}}✅ Disponible{{else}}❌ No disponible{{/if}}
+            </span>
+
+            <div class="actions">
+              <a class="product-link" href="/products/{{this._id}}">🔍 Ver más</a>
+              <button class="edit-btn" onclick="location.href='/products/edit/{{this._id}}'">✏️ Editar</button>
+              <button class="delete-btn" onclick="deleteProduct('{{this._id}}')">❌ Eliminar</button>
+
+              {{#if ../cartId}}
+                {{#if this.status}}
+                  <button class="cart-btn" onclick="addToCart('{{../cartId}}', '{{this._id}}')">🛒 Agregar al carrito</button>
+                {{/if}}
+              {{/if}}
+            </div>
+          </li>
+        {{/each}}
+      </ul>
+    {{else}}
+      <p>No hay productos disponibles.</p>
+    {{/if}}
+
+    {{#if hasPrevPage}}
+      <div class="pagination">
+        <a href="{{prevLink}}">⬅️ Página anterior</a>
+      </div>
+    {{/if}}
+
+    {{#if hasNextPage}}
+      <div class="pagination">
+        <a href="{{nextLink}}">Página siguiente ➡️</a>
+      </div>
+    {{/if}}
+  </main>
+
+  <script>
+    function deleteProduct(productId) {
+      if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+
+      fetch(`/api/products/${productId}`, {
+        method: 'DELETE'
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Error al eliminar producto');
+        location.reload();
+      })
+      .catch(err => alert(err.message));
+    }
+
+    function addToCart(cartId, productId) {
+      fetch(`/api/carts/${cartId}/product/${productId}`, {
+        method: 'POST'
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('No se pudo agregar el producto al carrito');
+        alert('✅ Producto agregado al carrito');
+      })
+      .catch(err => alert(err.message));
+    }
+  </script>
+</body>
+</html>

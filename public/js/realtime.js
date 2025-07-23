@@ -4,8 +4,8 @@ const productList = document.getElementById('productList');
 const addForm = document.getElementById('addForm');
 const deleteForm = document.getElementById('deleteForm');
 
-// Escuchar evento de productos actualizados desde el servidor
-socket.on('productList', products => {
+// Función para renderizar la lista de productos
+function renderProducts(products) {
   productList.innerHTML = '';
 
   products.forEach(prod => {
@@ -13,38 +13,37 @@ socket.on('productList', products => {
     li.style.marginBottom = '10px';
     li.style.borderBottom = '1px solid #ccc';
     li.style.paddingBottom = '10px';
-    li.setAttribute('data-id', prod.id);
+    li.setAttribute('data-id', prod._id); // MongoDB usa _id
 
     li.innerHTML = `
       <strong>${prod.title}</strong> - $${prod.price}<br>
-      🆔 ID: <code>${prod.id}</code>
-      <button class="deleteBtn" data-id="${prod.id}">❌ Eliminar</button>
+      🆔 ID: <code>${prod._id}</code>
+      <button class="deleteBtn" data-id="${prod._id}">❌ Eliminar</button>
     `;
 
     productList.appendChild(li);
   });
+}
 
-  // Botones de eliminar individuales
-  document.querySelectorAll('.deleteBtn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = e.target.getAttribute('data-id');
-      socket.emit('deleteProduct', id);
-    });
-  });
+// Escuchar la lista actualizada desde el servidor
+socket.on('productList', (products) => {
+  renderProducts(products);
 });
 
-// Agregar producto desde formulario
+// Enviar nuevo producto
 addForm.addEventListener('submit', e => {
   e.preventDefault();
   const formData = new FormData(addForm);
   const product = Object.fromEntries(formData.entries());
+
   product.price = parseFloat(product.price);
   product.stock = parseInt(product.stock);
+
   socket.emit('newProduct', product);
   addForm.reset();
 });
 
-// Eliminar producto manualmente por ID desde formulario
+// Eliminar producto por ID desde formulario
 deleteForm.addEventListener('submit', e => {
   e.preventDefault();
   const formData = new FormData(deleteForm);
@@ -53,7 +52,7 @@ deleteForm.addEventListener('submit', e => {
   deleteForm.reset();
 });
 
-// Eliminar producto con botón individual
+// Eliminar producto con botón dentro de la lista
 productList.addEventListener('click', (e) => {
   if (e.target.classList.contains('deleteBtn')) {
     const id = e.target.getAttribute('data-id');

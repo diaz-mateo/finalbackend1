@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>🛒 Mi Carrito</title>
+  <style>
+    body {
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .cart-container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 1rem 1.5rem;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      border-bottom: 1px solid #ddd;
+      padding: 1rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .controls button {
+      padding: 0.5rem 0.7rem;
+      font-size: 1rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .controls button:hover {
+      background-color: #0056b3;
+    }
+
+    .total {
+      font-weight: bold;
+      font-size: 1.3rem;
+      text-align: right;
+      margin-top: 1rem;
+    }
+
+    .actions {
+      margin-top: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .actions button,
+    .actions a {
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      text-decoration: none;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+      transition: background-color 0.2s ease;
+    }
+
+    .actions .clear {
+      background-color: #dc3545;
+    }
+
+    .actions .checkout {
+      background-color: #28a745;
+    }
+
+    .actions .back {
+      background-color: #6c757d;
+    }
+
+    .actions button:hover,
+    .actions a:hover {
+      opacity: 0.9;
+    }
+
+    .empty {
+      text-align: center;
+      font-size: 1.2rem;
+      margin: 2rem 0;
+    }
+
+    @media (max-width: 600px) {
+      li {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .controls {
+        justify-content: flex-start;
+      }
+
+      .total,
+      .actions {
+        text-align: center;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="cart-container">
+    <h1>🛒 Mi Carrito</h1>
+
+    {{#if cart.products.length}}
+      <ul>
+        {{#each cart.products}}
+          <li>
+            <div class="info">
+              <strong>{{this.product.title}}</strong>
+              Precio: ${{this.product.price}}<br>
+              Cantidad: <span id="qty-{{this.product._id}}">{{this.quantity}}</span><br>
+              Subtotal: ${{multiply this.product.price this.quantity}}
+            </div>
+            <div class="controls">
+              <button onclick="updateQuantity('{{../cart._id}}', '{{this.product._id}}', -1)">–</button>
+              <button onclick="updateQuantity('{{../cart._id}}', '{{this.product._id}}', 1)">+</button>
+              <button onclick="removeItem('{{../cart._id}}', '{{this.product._id}}')">❌</button>
+            </div>
+          </li>
+        {{/each}}
+      </ul>
+
+      <p class="total">
+        Total: ${{calculateTotal cart.products}}
+      </p>
+
+      <div class="actions">
+        <button class="clear" id="clearCart">🗑️ Vaciar carrito</button>
+        <button class="checkout" onclick="finalizePurchase()">✅ Finalizar compra</button>
+        <a class="back" href="/products">← Seguir comprando</a>
+      </div>
+    {{else}}
+      <p class="empty">🛍️ Tu carrito está vacío.</p>
+      <div class="actions">
+        <a class="back" href="/products">← Volver a productos</a>
+      </div>
+    {{/if}}
+  </div>
+
+  <script>
+    function removeItem(cartId, productId) {
+      fetch(`/api/carts/${cartId}/product/${productId}`, {
+        method: 'DELETE'
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('No se pudo quitar el producto');
+        location.reload();
+      })
+      .catch(err => alert(err.message));
+    }
+
+    function updateQuantity(cartId, productId, delta) {
+      const qtyElement = document.getElementById(`qty-${productId}`);
+      const currentQty = parseInt(qtyElement.textContent);
+      const newQty = currentQty + delta;
+
+      if (newQty < 1) {
+        return removeItem(cartId, productId);
+      }
+
+      fetch(`/api/carts/${cartId}/product/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: newQty })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('No se pudo actualizar la cantidad');
+        location.reload();
+      })
+      .catch(err => alert(err.message));
+    }
+
+    function finalizePurchase() {
+  fetch(`/api/carts/{{cart._id}}/purchase`, {
+    method: 'POST'
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('Error al finalizar compra');
+    return res.json();
+  })
+  .then(data => {
+    alert('🧾 Compra finalizada con éxito');
+    // Puedes redirigir a otra página o recargar el carrito vacío
+    window.location.href = '/products'; // por ejemplo, volver a productos
+  })
+  .catch(err => alert(err.message));
+}
+
+
+    document.getElementById('clearCart')?.addEventListener('click', () => {
+      fetch(`/api/carts/{{cart._id}}`, { method: 'DELETE' })
+        .then(res => {
+          if (!res.ok) throw new Error('Error al vaciar el carrito');
+          location.reload();
+        })
+        .catch(err => alert(err.message));
+    });
+  </script>
+</body>
+</html>

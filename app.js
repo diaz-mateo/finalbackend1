@@ -1,83 +1,73 @@
+// app.js
+require('dotenv').config(); // Carga variables de entorno desde .env
+
 const express = require('express');
-const app = express();
 const path = require('path');
 const http = require('http');
-const { Server } = require('socket.io');
+const session = require('express-session'); // ✅ Importar express-session
 const exphbs = require('express-handlebars');
+const connectDB = require('./db'); // Conexión a MongoDB
 
 // Routers
 const productsRouter = require('./routes/products.router');
-const cartsRouter = require('./routes/carts.router');
-const viewsRouter = require('./routes/views.router');
+const cartsRouter    = require('./routes/carts.router');
+const viewsRouter    = require('./routes/views.router');
 
-// Controladores para WebSocket
-const {
-  getProducts,
-  addProductRaw,
-  deleteProductById
-} = require('./controllers/products.controller');
+const app  = express();
+const PORT = process.env.PORT || 8080;
 
-// Configuración
-const PORT = 8080;
+// Conectar a la base de datos
+connectDB();
+
+// Crear servidor HTTP (necesario para socket.io)
 const server = http.createServer(app);
-const io = new Server(server);
+
+// ✅ Configurar express-session
+app.use(session({
+  secret: 'mi_clave_secreta_super_segura', // cambia esto por algo más seguro en producción
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 // 1 día
+  }
+}));
 
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Handlebars
-app.engine('handlebars', exphbs.engine());
+// ✅ Configuración de Handlebars con helpers
+const hbs = exphbs.create({
+  helpers: {
+    multiply: (a, b) => a * b,
+    calculateTotal: (products) => {
+      if (!products) return 0;
+      return products.reduce((total, item) => {
+        return total + item.product.price * item.quantity;
+      }, 0);
+    }
+  }
+});
+
+app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, 'views'));
 
 // Rutas
 app.use('/api/products', productsRouter);
-app.use('/api/carts', cartsRouter);
-app.use('/', viewsRouter);
+app.use('/api/carts',    cartsRouter);
+app.use('/',              viewsRouter);
 
-// WebSocket
-io.on('connection', (socket) => {
-  console.log('🟢 Cliente conectado por websocket');
-
-  // Enviar lista inicial
-  getProducts().then(products => {
-    socket.emit('productList', products);
-  });
-
-  // Agregar producto
-  socket.on('newProduct', async (product) => {
-    try {
-      await addProductRaw(product);
-      const updatedProducts = await getProducts();
-      io.emit('productList', updatedProducts);
-    } catch (error) {
-      console.error('❌ Error al agregar producto:', error.message);
-      socket.emit('addError', 'Error al agregar producto.');
-    }
-  });
-
-  // Eliminar producto
-  socket.on('deleteProduct', async (id) => {
-    try {
-      const success = await deleteProductById(id);
-      if (!success) {
-        console.warn(`⚠️ Producto con ID ${id} no encontrado.`);
-        socket.emit('deleteError', `Producto con ID ${id} no encontrado.`);
-        return;
-      }
-
-      const updatedProducts = await getProducts();
-      io.emit('productList', updatedProducts);
-    } catch (error) {
-      console.error('❌ Error al eliminar producto:', error.message);
-      socket.emit('deleteError', 'Error interno al eliminar producto.');
-    }
-  });
+// Ruta 404 — corregida para Express v5
+app.use(/(.*)/, (req, res) => {
+  res.status(404).render('notFound', { url: req.originalUrl });
 });
 
-// Iniciar servidor
+// WebSockets
+require('./websocket')(server);
+
+// Arrancar el servidor
 server.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
 });

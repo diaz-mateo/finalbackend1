@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Agregar nuevo producto</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .form-container {
+      background-color: #ffffff;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+    }
+
+    form div {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #28a745;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .back-button {
+      display: block;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .back-button a {
+      text-decoration: none;
+    }
+
+    .back-button button {
+      background-color: #007bff;
+    }
+
+    .back-button button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <div class="back-button">
+      <a href="/">
+        <button type="button">🏠 Volver al inicio</button>
+      </a>
+    </div>
+
+    <h1>Agregar nuevo producto</h1>
+
+    <form action="/api/products" method="POST">
+      <div>
+        <label for="title">Título:</label>
+        <input type="text" id="title" name="title" required>
+      </div>
+
+      <div>
+        <label for="description">Descripción:</label>
+        <input type="text" id="description" name="description" required>
+      </div>
+
+      <div>
+        <label for="price">Precio:</label>
+        <input type="number" id="price" name="price" step="0.01" required>
+      </div>
+
+      <div>
+        <label for="code">Código:</label>
+        <input type="text" id="code" name="code" required>
+      </div>
+
+      <div>
+        <label for="stock">Stock:</label>
+        <input type="number" id="stock" name="stock" required>
+      </div>
+
+      <div>
+        <label for="category">Categoría:</label>
+        <input type="text" id="category" name="category" required>
+      </div>
+
+      <div>
+        <label for="status">Estado:</label>
+        <select id="status" name="status" required>
+          <option value="true">Activo</option>
+          <option value="false">Inactivo</option>
+        </select>
+      </div>
+
+      <button type="submit">Agregar producto</button>
+    </form>
+  </div>
+</body>
+</html>
