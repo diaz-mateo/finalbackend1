@@ -20,6 +20,12 @@
       border-bottom: 1px solid #ccc;
     }
 
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
     main {
       padding: 2rem;
     }
@@ -136,18 +142,33 @@
       background-color: #ccc;
       color: #666;
     }
+
+    .realtime-btn {
+      background-color: #6f42c1;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .realtime-btn:hover {
+      background-color: #5936a4;
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>🛍️ Lista de Productos</h1>
-    <nav>
+    <div class="nav-links">
       {{#if cartId}}
         <a href="/carts/{{cartId}}">🛒 Ver mi carrito</a>
       {{else}}
         <span>🛒 Carrito no disponible</span>
       {{/if}}
-    </nav>
+      <button class="realtime-btn" onclick="location.href='/realtimeproducts'">⚡ Productos en tiempo real</button>
+    </div>
   </header>
 
   <main>

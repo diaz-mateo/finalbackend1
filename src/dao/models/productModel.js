@@ -40,10 +40,6 @@ const productSchema = new Schema(
       required: [true, 'La categoría es obligatoria'],
       trim: true
     },
-    thumbnails: {
-      type: [String],
-      default: []
-    }
   },
   {
     timestamps: true

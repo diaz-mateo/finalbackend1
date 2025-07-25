@@ -38,4 +38,4 @@ Este proyecto es una API RESTful desarrollada con Node.js, Express y MongoDB (a 
 
 👤 Autor
 Mateo Díaz Paredes
-Estudiante de Backend en Coderhouse.# finalbackend1
+Estudiante de Backend en Coderhouse.

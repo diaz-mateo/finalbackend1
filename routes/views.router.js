@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ProductManager = require('../src/dao/managers/productDBManager');
 const CartManager = require('../src/dao/managers/cartDBManager');
+const TicketModel = require('../src/dao/models/ticketModel');
 
 // ✅ Middleware para asignar o crear un carrito al usuario
 router.use(async (req, res, next) => {
@@ -56,7 +57,7 @@ router.post('/products/new', async (req, res) => {
   }
 });
 
-// ✅ Formulario para editar producto (¡ESTO FALTABA!)
+// ✅ Formulario para editar producto
 router.get('/products/edit/:pid', async (req, res) => {
   try {
     const product = await ProductManager.getProductById(req.params.pid);
@@ -110,7 +111,7 @@ router.get('/products', async (req, res) => {
   }
 });
 
-// ✅ Vista de producto individual (DEBE ir después de /products/new y /products/edit/:pid)
+// ✅ Vista de producto individual
 router.get('/products/:pid', async (req, res) => {
   try {
     const product = await ProductManager.getProductById(req.params.pid);
@@ -147,12 +148,11 @@ router.get('/carts/:cid', async (req, res) => {
   }
 });
 
-// ✅ Vista de productos en tiempo real
+// ✅ Vista de productos en tiempo real (CORREGIDO)
 router.get('/realtimeproducts', async (req, res) => {
   try {
-    let products = await ProductManager.getProducts();
-
-    products = products.map(p => ({
+    const result = await ProductManager.getProductsPaginated({ limit: 100 });
+    const products = result.docs.map(p => ({
       ...p,
       id: p._id.toString()
     }));
@@ -161,6 +161,49 @@ router.get('/realtimeproducts', async (req, res) => {
   } catch (error) {
     console.error('Error al obtener productos en tiempo real:', error);
     res.status(500).send('Error al obtener productos en tiempo real');
+  }
+});
+
+// ✅ Vista de ticket después de compra
+router.get('/ticket/:tid', async (req, res) => {
+  try {
+    const ticket = await TicketModel.findById(req.params.tid).populate('products.product');
+    if (!ticket) return res.status(404).send('Ticket no encontrado');
+
+    const formattedTicket = {
+      ...ticket.toObject(),
+      products: ticket.products.map(item => ({
+        title: item.product.title,
+        quantity: item.quantity,
+        price: item.product.price,
+        total: item.quantity * item.product.price
+      }))
+    };
+
+    res.render('ticket', { ticket: formattedTicket });
+  } catch (error) {
+    console.error('Error al obtener el ticket:', error);
+    res.status(500).send('Error al obtener el ticket');
+  }
+});
+
+// ✅ Ruta para finalizar compra y redirigir al ticket
+router.post('/purchase', async (req, res) => {
+  try {
+    const cartId = req.session.cartId;
+    const purchaser = 'usuario@example.com'; // 🔁 Puedes reemplazarlo con el usuario real si usas auth
+
+    const result = await CartManager.finalizePurchase(cartId, purchaser);
+
+    // Vaciar carrito de sesión o regenerar uno nuevo
+    const newCart = await CartManager.createCart();
+    req.session.cartId = newCart._id.toString();
+
+    // Redirigir al ticket
+    res.redirect(`/ticket/${result.ticket._id}`);
+  } catch (error) {
+    console.error('❌ Error en finalizePurchase:', error);
+    res.status(500).send('Error al finalizar la compra');
   }
 });
 
